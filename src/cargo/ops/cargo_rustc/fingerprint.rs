@@ -106,7 +106,23 @@ pub fn prepare_target<'a, 'cfg>(cx: &mut Context<'a, 'cfg>,
     });
 
     let fresh = compare.is_ok() && !missing_outputs;
-    Ok((if fresh {Fresh} else {Dirty}, write_fingerprint, Work::noop()))
+
+    // If the unit is fresh, we will emit whatever diagnostics was saved for it
+    let fresh_work = if fresh {
+        Work::new(move |_| {
+            let mut file = fs::File::open("saved_diagnostics.txt")?;
+            let mut diags = String::new();
+            file.read_to_string(&mut diags)?;
+
+            println!("{}", diags);
+
+            Ok(())
+        })
+    } else {
+        Work::noop()
+    };
+
+    Ok((if fresh {Fresh} else {Dirty}, write_fingerprint, fresh_work))
 }
 
 /// A fingerprint can be considered to be a "short string" representing the
