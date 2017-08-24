@@ -380,6 +380,10 @@ fn rustc<'a, 'cfg>(cx: &mut Context<'a, 'cfg>,
                             internal(&format!("compiler produced invalid json: `{}`", line))
                         })?;
 
+                        // Record messages sent from rustc
+                        let mut file = fs::File::create("saved_diagnostics.txt")?;
+                        file.write_all(format!("{}", compiler_message).as_bytes())?;
+
                         machine_message::emit(machine_message::FromCompiler {
                             package_id: &package_id,
                             target: &target,
